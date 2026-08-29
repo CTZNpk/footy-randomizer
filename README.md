@@ -1,36 +1,54 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Footy
 
-## Getting Started
+Weighted football team randomizer. Players are rated by their peers, that average
+becomes their starting weight, and match results move it from there. A wheel picks
+players for two teams, with a slice size proportional to weight.
 
-First, run the development server:
+## Setup
 
 ```bash
+npm install
+cp .env.local.example .env.local   # then fill it in
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+| Variable | Purpose |
+| --- | --- |
+| `MONGODB_URI` | Mongo connection string |
+| `MONGODB_DB` | Database name |
+| `ADMIN_PASSWORD` | The single admin password |
+| `AUTH_SECRET` | Long random string used to sign the admin session cookie |
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## How weight works
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+weight = lockedRating + 2 × wins − 1 × losses
+```
 
-## Learn More
+`lockedRating` starts at 0 and is set when the admin closes a player's rating poll,
+snapshotting the average of every rating that has not been disregarded. Draws move
+nothing. Weight is derived from match history at read time, so editing or deleting a
+match corrects every weight automatically.
 
-To learn more about Next.js, take a look at the following resources:
+Weight can go negative and is displayed as-is. The wheel shifts the selected players'
+weights so the lowest becomes 1 before turning them into slice angles, which keeps every
+slice non-zero. That shift is never shown.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Routes
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Route | Who | What |
+| --- | --- | --- |
+| `/` | anyone | Pick today's pool, spin, get Team A and Team B |
+| `/rate` | anyone | Rate players whose poll is open, identified by email |
+| `/admin/players` | admin | Add players, open/close polls, edit and revert ratings |
+| `/admin/votes` | admin | Review ratings, disregard and restore individual votes |
+| `/admin/matches` | admin | Record, edit and delete match results |
 
-## Deploy on Vercel
+## Tests
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npm test
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Covers the pure logic: rating averages, weight arithmetic, form strings, wheel slice
+normalisation, and the weighted alternating draft.
