@@ -1,3 +1,5 @@
+import { Team } from './types'
+
 export const WIN_DELTA = 2
 export const LOSS_DELTA = -1
 export const DRAW_DELTA = 0
@@ -20,3 +22,5 @@ export const MAX_EXTRA_TURNS = 5
 export const MIN_SPIN_MS = 2200
 export const MAX_EXTRA_SPIN_MS = 1400
 export const SLICE_EDGE_MARGIN = 0.15
+
+export const SNAKE_ORDER: Team[] = ['A', 'B', 'B', 'A']

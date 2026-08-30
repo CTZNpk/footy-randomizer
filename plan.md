@@ -31,12 +31,17 @@ The app has three features:
 
 ## Decisions confirmed with the user
 
-- **Team split: alternating draft.** Spin the wheel repeatedly. Each spin picks
-  one player out of the remaining pool (probability proportional to their
-  shifted weight), removes them from the pool, and assigns them to teams in
-  strict alternation — A, B, A, B. Weight therefore influences *draft order*,
-  not team balance. Teams end up equal in size (odd counts give Team A the
-  extra player). There is no cap on how many times a user can re-spin.
+- **Team split: snake draft.** Spin the wheel repeatedly. Each spin picks one
+  player out of the remaining pool (probability proportional to their shifted
+  weight), removes them from the pool, and assigns them in snake order —
+  A, B, B, A, A, B, B, A, with a coin flip deciding which side leads. Weight
+  drives *when* a player is picked, and the snake keeps the early (heavier)
+  picks from stacking on one side. Teams are equal in size, the leading side
+  taking the extra player on an odd pool. There is no cap on how many times a
+  user can re-spin.
+  *(Revised after the first build: strict A/B/A/B alternation gave Team A the
+  1st and 3rd picks and so systematically the heavier squad — 28.5 vs 3.0 in a
+  test run. Snake fixes that without changing anything else.)*
 - **The player checkboxes on the landing page are the pool for the day.** Not
   everyone is available every day, so the user ticks whoever showed up and only
   those players get wheel slices. Selection is per-visit and isn't persisted —
@@ -359,3 +364,12 @@ The plan was followed as written except for these, all found while verifying:
    now uses CSS `order` on a single instance.
 6. All dates render as ISO slices rather than `toLocaleDateString()`, which
    produced a server/client hydration mismatch.
+7. **The draft is a snake, not a strict alternation** (see the revised decision
+   above). `SNAKE_ORDER` lives in `lib/constants.ts`; `draftTeams` falls back to
+   the other side when the snake's turn would overfill a team, which keeps the
+   halves the right size for odd pools.
+8. **Which side leads the snake is itself a coin flip.** A fixed A-leading snake
+   still gave Team A picks 1, 4 and 5 against Team B's 2, 3 and 6, worth about
+   1.1 weight to Team A averaged over 20,000 drafts. Flipping the lead removes
+   it (17.88 vs 17.92 on a pool whose even split is 17.90). A regression test in
+   `lib/__tests__/draft.test.ts` holds the gap under 0.25.

@@ -4,6 +4,7 @@ import {
   MIN_SPIN_MS,
   MIN_TURNS,
   SLICE_EDGE_MARGIN,
+  SNAKE_ORDER,
 } from './constants'
 import { pickIndex, RandomSource } from './random'
 import { sliceBounds, sliceFractions } from './weights'
@@ -19,9 +20,23 @@ export function draftTeams<T extends { weight: number }>(
   const pool = [...players]
   const order: Pick<T>[] = []
 
+  const lead: Team = random() < 0.5 ? 'B' : 'A'
+  const trail: Team = lead === 'A' ? 'B' : 'A'
+  const snake = SNAKE_ORDER.map((team) => (team === 'A' ? lead : trail))
+
+  const capacity: Record<Team, number> = {
+    [lead]: Math.ceil(players.length / 2),
+    [trail]: Math.floor(players.length / 2),
+  } as Record<Team, number>
+  const taken: Record<Team, number> = { A: 0, B: 0 }
+
   while (pool.length > 0) {
     const index = pickIndex(sliceFractions(pool.map((p) => p.weight)), random)
-    order.push({ player: pool[index], team: order.length % 2 === 0 ? 'A' : 'B' })
+    const turn = snake[order.length % snake.length]
+    const team = taken[turn] < capacity[turn] ? turn : turn === 'A' ? 'B' : 'A'
+
+    taken[team]++
+    order.push({ player: pool[index], team })
     pool.splice(index, 1)
   }
 

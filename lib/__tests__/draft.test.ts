@@ -46,10 +46,19 @@ describe('draftTeams', () => {
     expect(order.filter((p) => p.team === 'B')).toHaveLength(3)
   })
 
-  it('gives team A the extra player on an odd pool', () => {
-    const order = draftTeams(players([1, 2, 3, 4, 5]), mulberry(1))
-    expect(order.filter((p) => p.team === 'A')).toHaveLength(3)
-    expect(order.filter((p) => p.team === 'B')).toHaveLength(2)
+  it('gives the extra player on an odd pool to whichever side leads', () => {
+    const sizes = draftTeams(players([1, 2, 3, 4, 5]), mulberry(1)).reduce(
+      (counts, pick) => ({ ...counts, [pick.team]: counts[pick.team] + 1 }),
+      { A: 0, B: 0 },
+    )
+    expect([sizes.A, sizes.B].sort()).toEqual([2, 3])
+  })
+
+  it('leads with either side depending on the draw', () => {
+    const leaders = new Set(
+      Array.from({ length: 40 }, (_, seed) => draftTeams(players([1, 2, 3, 4]), mulberry(seed))[0].team),
+    )
+    expect(leaders).toEqual(new Set(['A', 'B']))
   })
 
   it('drafts every player exactly once', () => {
@@ -78,9 +87,31 @@ describe('draftTeams', () => {
     expect(firstRoundPicks).toBeGreaterThan(150)
   })
 
-  it('alternates teams in draft order', () => {
-    const order = draftTeams(players([1, 2, 3, 4]), sequence([0.5]))
-    expect(order.map((p) => p.team)).toEqual(['A', 'B', 'A', 'B'])
+  it('snakes teams in draft order', () => {
+    const order = draftTeams(players([1, 2, 3, 4, 5, 6, 7, 8]), sequence([0.5]))
+    expect(order.map((p) => p.team)).toEqual(['A', 'B', 'B', 'A', 'A', 'B', 'B', 'A'])
+  })
+
+  it('balances the teams when the pick order runs strongest first', () => {
+    const pool = players([10, 8, 6, 4])
+    const order = draftTeams(pool, () => 0)
+
+    const total = (team: 'A' | 'B') =>
+      order.filter((p) => p.team === team).reduce((sum, p) => sum + p.player.weight, 0)
+
+    expect(order.map((p) => p.player.weight)).toEqual([10, 8, 6, 4])
+    expect(total('A')).toBe(total('B'))
+  })
+
+  it('never exceeds half the pool on either side', () => {
+    for (let size = 2; size <= 11; size++) {
+      const order = draftTeams(players(Array.from({ length: size }, (_, i) => i)), mulberry(size))
+      const counts = [
+        order.filter((p) => p.team === 'A').length,
+        order.filter((p) => p.team === 'B').length,
+      ].sort()
+      expect(counts).toEqual([Math.floor(size / 2), Math.ceil(size / 2)])
+    }
   })
 })
 
@@ -137,5 +168,21 @@ describe('remainingPool', () => {
     expect(afterTwo).toHaveLength(2)
     expect(afterTwo).not.toContain(order[0].player)
     expect(pool.indexOf(afterTwo[0])).toBeLessThan(pool.indexOf(afterTwo[1]))
+  })
+})
+
+describe('snake draft balance', () => {
+  it('does not systematically favour either side', () => {
+    const pool = players([9.2, 7.8, 6.4, 5.1, 4.3, 3.0])
+    const runs = 20000
+
+    const totals = { A: 0, B: 0 }
+    for (let seed = 0; seed < runs; seed++) {
+      for (const pick of draftTeams(pool, mulberry(seed))) {
+        totals[pick.team] += pick.player.weight
+      }
+    }
+
+    expect(Math.abs(totals.A - totals.B) / runs).toBeLessThan(0.25)
   })
 })
