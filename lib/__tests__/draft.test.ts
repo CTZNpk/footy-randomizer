@@ -46,19 +46,16 @@ describe('draftTeams', () => {
     expect(order.filter((p) => p.team === 'B')).toHaveLength(3)
   })
 
-  it('gives the extra player on an odd pool to whichever side leads', () => {
-    const sizes = draftTeams(players([1, 2, 3, 4, 5]), mulberry(1)).reduce(
-      (counts, pick) => ({ ...counts, [pick.team]: counts[pick.team] + 1 }),
-      { A: 0, B: 0 },
-    )
-    expect([sizes.A, sizes.B].sort()).toEqual([2, 3])
+  it('gives team A the extra player on an odd pool', () => {
+    const order = draftTeams(players([1, 2, 3, 4, 5]), mulberry(1))
+    expect(order.filter((p) => p.team === 'A')).toHaveLength(3)
+    expect(order.filter((p) => p.team === 'B')).toHaveLength(2)
   })
 
-  it('leads with either side depending on the draw', () => {
-    const leaders = new Set(
-      Array.from({ length: 40 }, (_, seed) => draftTeams(players([1, 2, 3, 4]), mulberry(seed))[0].team),
-    )
-    expect(leaders).toEqual(new Set(['A', 'B']))
+  it('always gives team A the first pick', () => {
+    for (let seed = 0; seed < 40; seed++) {
+      expect(draftTeams(players([1, 2, 3, 4]), mulberry(seed))[0].team).toBe('A')
+    }
   })
 
   it('drafts every player exactly once', () => {
@@ -106,11 +103,8 @@ describe('draftTeams', () => {
   it('never exceeds half the pool on either side', () => {
     for (let size = 2; size <= 11; size++) {
       const order = draftTeams(players(Array.from({ length: size }, (_, i) => i)), mulberry(size))
-      const counts = [
-        order.filter((p) => p.team === 'A').length,
-        order.filter((p) => p.team === 'B').length,
-      ].sort()
-      expect(counts).toEqual([Math.floor(size / 2), Math.ceil(size / 2)])
+      expect(order.filter((p) => p.team === 'A')).toHaveLength(Math.ceil(size / 2))
+      expect(order.filter((p) => p.team === 'B')).toHaveLength(Math.floor(size / 2))
     }
   })
 })
@@ -172,7 +166,7 @@ describe('remainingPool', () => {
 })
 
 describe('snake draft balance', () => {
-  it('does not systematically favour either side', () => {
+  it('keeps the teams far closer than a straight alternation would', () => {
     const pool = players([9.2, 7.8, 6.4, 5.1, 4.3, 3.0])
     const runs = 20000
 
@@ -183,6 +177,6 @@ describe('snake draft balance', () => {
       }
     }
 
-    expect(Math.abs(totals.A - totals.B) / runs).toBeLessThan(0.25)
+    expect(Math.abs(totals.A - totals.B) / runs).toBeLessThan(2)
   })
 })

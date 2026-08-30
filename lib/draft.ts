@@ -20,19 +20,15 @@ export function draftTeams<T extends { weight: number }>(
   const pool = [...players]
   const order: Pick<T>[] = []
 
-  const lead: Team = random() < 0.5 ? 'B' : 'A'
-  const trail: Team = lead === 'A' ? 'B' : 'A'
-  const snake = SNAKE_ORDER.map((team) => (team === 'A' ? lead : trail))
-
   const capacity: Record<Team, number> = {
-    [lead]: Math.ceil(players.length / 2),
-    [trail]: Math.floor(players.length / 2),
-  } as Record<Team, number>
+    A: Math.ceil(players.length / 2),
+    B: Math.floor(players.length / 2),
+  }
   const taken: Record<Team, number> = { A: 0, B: 0 }
 
   while (pool.length > 0) {
     const index = pickIndex(sliceFractions(pool.map((p) => p.weight)), random)
-    const turn = snake[order.length % snake.length]
+    const turn = SNAKE_ORDER[order.length % SNAKE_ORDER.length]
     const team = taken[turn] < capacity[turn] ? turn : turn === 'A' ? 'B' : 'A'
 
     taken[team]++

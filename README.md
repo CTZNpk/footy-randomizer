@@ -37,10 +37,10 @@ slice non-zero. That shift is never shown.
 ## How the draft works
 
 Each spin draws one player from the weighted distribution, removes them from the wheel,
-and assigns them in snake order — A, B, B, A, A, B, B, A — with a coin flip deciding
-which side leads. Weight decides *when* a player is picked; the snake stops the early
-picks from stacking on one side, and flipping the lead keeps either side from being
-favoured on average. The leading side takes the extra player when the pool is odd.
+and assigns them in snake order — A, B, B, A, A, B, B, A. Weight decides *when* a player
+is picked; the snake stops the early picks from stacking on one side. Team A picks first
+and takes the extra player when the pool is odd, which leaves it around 1.1 weight
+heavier on average — small next to the spread of any individual draft.
 
 ## Routes
 

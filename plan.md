@@ -34,11 +34,10 @@ The app has three features:
 - **Team split: snake draft.** Spin the wheel repeatedly. Each spin picks one
   player out of the remaining pool (probability proportional to their shifted
   weight), removes them from the pool, and assigns them in snake order —
-  A, B, B, A, A, B, B, A, with a coin flip deciding which side leads. Weight
-  drives *when* a player is picked, and the snake keeps the early (heavier)
-  picks from stacking on one side. Teams are equal in size, the leading side
-  taking the extra player on an odd pool. There is no cap on how many times a
-  user can re-spin.
+  A, B, B, A, A, B, B, A. Team A always picks first. Weight drives *when* a
+  player is picked, and the snake keeps the early (heavier) picks from stacking
+  on one side. Teams are equal in size, Team A taking the extra player on an odd
+  pool. There is no cap on how many times a user can re-spin.
   *(Revised after the first build: strict A/B/A/B alternation gave Team A the
   1st and 3rd picks and so systematically the heavier squad — 28.5 vs 3.0 in a
   test run. Snake fixes that without changing anything else.)*
@@ -368,8 +367,12 @@ The plan was followed as written except for these, all found while verifying:
    above). `SNAKE_ORDER` lives in `lib/constants.ts`; `draftTeams` falls back to
    the other side when the snake's turn would overfill a team, which keeps the
    halves the right size for odd pools.
-8. **Which side leads the snake is itself a coin flip.** A fixed A-leading snake
-   still gave Team A picks 1, 4 and 5 against Team B's 2, 3 and 6, worth about
-   1.1 weight to Team A averaged over 20,000 drafts. Flipping the lead removes
-   it (17.88 vs 17.92 on a pool whose even split is 17.90). A regression test in
-   `lib/__tests__/draft.test.ts` holds the gap under 0.25.
+8. **Team A always leads the snake — no coin flip.** Measured over 20,000
+   drafts, the fixed snake leaves Team A about 1.1 weight heavier on average
+   (18.47 vs 17.33 on a pool whose even split is 17.90), because Team A takes
+   picks 1, 4 and 5 against Team B's 2, 3 and 6. Randomising the lead would
+   erase that, and was tried, but the residual lean is small next to the
+   per-draft spread of a random draft and the user chose to keep the simpler
+   fixed order. The regression test in `lib/__tests__/draft.test.ts` holds the
+   gap under 2, which catches a regression to straight alternation without
+   pinning the small structural lean.
