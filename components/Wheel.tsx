@@ -8,7 +8,17 @@ const COLORS = [
   '#facc15', '#2dd4bf', '#f87171', '#818cf8', '#84cc16',
 ]
 
-const LABEL_MIN_DEGREES = 22
+const LABEL_OUTER_RADIUS = 94
+const LABEL_MIN_SIZE = 3
+const LABEL_MAX_SIZE = 7
+const GLYPH_ASPECT = 0.55
+
+function labelFontSize(name: string, degrees: number): number {
+  const radians = (degrees * Math.PI) / 180
+  const fitted =
+    (LABEL_OUTER_RADIUS * radians) / (1 + GLYPH_ASPECT * name.length * radians)
+  return Math.min(LABEL_MAX_SIZE, Math.max(LABEL_MIN_SIZE, fitted))
+}
 
 function arcPath(radius: number, startDeg: number, endDeg: number): string {
   const point = (deg: number) => {
@@ -56,16 +66,15 @@ export default function Wheel({
                 stroke="#0b1f16"
                 strokeWidth="0.8"
               />
-              {end - start > LABEL_MIN_DEGREES && (
-                <text
-                  transform={`rotate(${(start + end) / 2}) translate(0 -62) rotate(90)`}
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  className="fill-pitch text-[7px] font-bold"
-                >
-                  {player.name}
-                </text>
-              )}
+              <text
+                transform={`rotate(${(start + end) / 2}) translate(0 -${LABEL_OUTER_RADIUS}) rotate(90)`}
+                textAnchor="start"
+                dominantBaseline="middle"
+                fontSize={labelFontSize(player.name, end - start)}
+                className="fill-pitch font-bold"
+              >
+                {player.name}
+              </text>
             </g>
           )
         })}
