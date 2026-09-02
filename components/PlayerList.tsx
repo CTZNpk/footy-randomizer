@@ -1,7 +1,14 @@
 'use client'
 
 import FormPills from './FormPills'
+import SortButton from './SortButton'
+import { useSort } from '@/lib/sort'
 import { PlayerView } from '@/lib/types'
+
+const SORT_VALUES = {
+  name: (player: PlayerView) => player.name,
+  weight: (player: PlayerView) => player.weight,
+}
 
 export default function PlayerList({
   players,
@@ -18,6 +25,8 @@ export default function PlayerList({
   onClear: () => void
   disabled: boolean
 }) {
+  const { rows, sort, toggle } = useSort(players, SORT_VALUES, { key: 'weight', direction: 'desc' })
+
   return (
     <section className="rounded-xl border border-line bg-pitch-soft/60 p-4">
       <header className="mb-3 flex items-center justify-between">
@@ -35,8 +44,14 @@ export default function PlayerList({
         </div>
       </header>
 
+      <div className="flex items-center gap-3 border-b border-line/60 pb-2 text-xs uppercase tracking-wide text-muted">
+        <span className="w-4" />
+        <SortButton label="Player" sortKey="name" sort={sort} onSort={toggle} className="flex-1" />
+        <SortButton label="Weight" sortKey="weight" sort={sort} onSort={toggle} />
+      </div>
+
       <ul className="divide-y divide-line/60">
-        {players.map((player) => (
+        {rows.map((player) => (
           <li key={player.id}>
             <label className="flex cursor-pointer items-center gap-3 py-2 hover:bg-line/20">
               <input

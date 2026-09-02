@@ -5,7 +5,9 @@ export const LOSS_DELTA = -1
 export const DRAW_DELTA = 0
 
 export const WHEEL_SHIFT = 1
-export const STREAK_LENGTH = 5
+export const STREAK_LENGTH = 20
+export const STREAK_LENGTH_SM = 10
+export const STREAK_LENGTH_XS = 5
 
 export const RATING_MIN = 1
 export const RATING_MAX = 10

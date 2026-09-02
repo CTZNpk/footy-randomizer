@@ -27,12 +27,12 @@ describe('playerWeight', () => {
 })
 
 describe('recentForm', () => {
-  it('keeps the most recent five, newest last', () => {
-    const outcomes: Outcome[] = ['W', 'W', 'L', 'D', 'L', 'W', 'W']
-    expect(recentForm(outcomes)).toEqual(['L', 'D', 'L', 'W', 'W'])
+  it('keeps the most recent twenty, newest last', () => {
+    const outcomes: Outcome[] = [...Array<Outcome>(3).fill('D'), ...Array<Outcome>(20).fill('W')]
+    expect(recentForm(outcomes)).toEqual(Array<Outcome>(20).fill('W'))
   })
 
-  it('returns everything when fewer than five matches were played', () => {
+  it('returns everything when fewer than twenty matches were played', () => {
     expect(recentForm(['W', 'L'])).toEqual(['W', 'L'])
   })
 })

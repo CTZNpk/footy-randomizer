@@ -4,7 +4,17 @@ import { Fragment, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import RatingEditDialog from './RatingEditDialog'
 import FormPills from './FormPills'
+import SortButton from './SortButton'
+import { useSort } from '@/lib/sort'
 import { AdminPlayerView } from '@/lib/types'
+
+const SORT_VALUES = {
+  name: (player: AdminPlayerView) => player.name,
+  lockedRating: (player: AdminPlayerView) => player.lockedRating,
+  weight: (player: AdminPlayerView) => player.weight,
+  wins: (player: AdminPlayerView) => player.wins,
+  pollOpen: (player: AdminPlayerView) => Number(player.pollOpen),
+}
 
 export default function PlayersTable({ players }: { players: AdminPlayerView[] }) {
   const router = useRouter()
@@ -12,6 +22,7 @@ export default function PlayersTable({ players }: { players: AdminPlayerView[] }
   const [error, setError] = useState<string | null>(null)
   const [editing, setEditing] = useState<AdminPlayerView | null>(null)
   const [expanded, setExpanded] = useState<string | null>(null)
+  const { rows, sort, toggle } = useSort(players, SORT_VALUES, { key: 'weight', direction: 'desc' })
 
   const send = async (url: string, method: string, body?: unknown) => {
     setError(null)
@@ -50,17 +61,27 @@ export default function PlayersTable({ players }: { players: AdminPlayerView[] }
         <table className="w-full text-sm">
           <thead className="bg-pitch-soft text-left text-xs uppercase tracking-wide text-muted">
             <tr>
-              <th className="p-3">Player</th>
-              <th className="p-3">Rating</th>
-              <th className="p-3">Weight</th>
-              <th className="p-3">Record</th>
+              <th className="p-3">
+                <SortButton label="Player" sortKey="name" sort={sort} onSort={toggle} />
+              </th>
+              <th className="p-3">
+                <SortButton label="Rating" sortKey="lockedRating" sort={sort} onSort={toggle} />
+              </th>
+              <th className="p-3">
+                <SortButton label="Weight" sortKey="weight" sort={sort} onSort={toggle} />
+              </th>
+              <th className="p-3">
+                <SortButton label="Record" sortKey="wins" sort={sort} onSort={toggle} />
+              </th>
               <th className="p-3">Form</th>
-              <th className="p-3">Poll</th>
+              <th className="p-3">
+                <SortButton label="Poll" sortKey="pollOpen" sort={sort} onSort={toggle} />
+              </th>
               <th className="p-3 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
-            {players.map((player) => (
+            {rows.map((player) => (
               <Fragment key={player.id}>
                 <tr className={player.active ? '' : 'opacity-40'}>
                   <td className="p-3 font-medium">{player.name}</td>
